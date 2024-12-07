@@ -24,7 +24,7 @@ void read_graph(char *filename, Graph *g, bool directed){
 
   g->nvertices = nvertices;                      /* initialize Graph fields */
   g->nedges = nedges;
-  g->directed = false;
+  g->directed = directed;
   g->edges = malloc((nvertices)*sizeof(Edgenode));
   
   for (int i=0;i<nvertices;++i)
