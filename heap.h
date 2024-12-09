@@ -10,16 +10,16 @@ typedef struct {
 } Heap;
 
 typedef struct {
-    int length;
-    int k;
-    TopKHeapNode* arr;
-} TopKHeap;
-
-typedef struct {
     int u;
     int v;
     int distance;
 } TopKHeapNode;
+
+typedef struct {
+    int length;
+    int max_size;
+    TopKHeapNode* arr;
+} TopKHeap;
 
 Heap* create_heap(int max_size);
 void heappush(Heap* heap, int vertex, int distance);

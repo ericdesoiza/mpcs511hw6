@@ -13,7 +13,7 @@ Heap* create_heap(int max_size) {
 }
 
 void heappush(Heap* heap, int vertex, int distance) {
-  if (heap->length == heap->max_size) {
+  if (heap->length >= heap->max_size - 1) {
     heap->arr = realloc(heap->arr, 2 * (heap->max_size) * sizeof(HeapNode));
     heap->max_size = heap->max_size * 2;
   }
@@ -86,8 +86,8 @@ HeapNode heappop(Heap* heap) {
 TopKHeap* create_topkheap(int k) {
     TopKHeap* heap = malloc(sizeof(TopKHeap));
     heap->length = 0;
-    heap->k = k;
-    heap->arr = malloc(k * sizeof(TopKHeapNode));
+    heap->max_size = k;
+    heap->arr = calloc(k, sizeof(TopKHeapNode));
 
     return heap;
 }
@@ -99,9 +99,9 @@ void topkheappush(TopKHeap* heap, int u, int v, int distance) {
   }
 
   heap->length++;
-  heap->arr[heap->length - 1] = (HeapNode) {u, v, distance};
+  heap->arr[heap->length - 1] = (TopKHeapNode) {u, v, distance};
 
-  HeapNode new_element, parent;
+  TopKHeapNode new_element, parent;
   int start, position, parent_position;
 
   new_element = heap->arr[heap->length - 1];
@@ -121,10 +121,10 @@ void topkheappush(TopKHeap* heap, int u, int v, int distance) {
   heap->arr[position] = new_element;
 }
 
-TopKHeapNode heappop(TopKHeap* heap) {
+TopKHeapNode topkheappop(TopKHeap* heap) {
   if (heap->length == 0) {
     printf("Popping from an empty heap\n");
-    return (TopKNode) {-1 , -1, -1};
+    return (TopKHeapNode) {-1 , -1, -1};
   }
 
   int left_child_index, right_child_index, smallest_child_index, parent_index;
