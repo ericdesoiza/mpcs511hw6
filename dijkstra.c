@@ -70,65 +70,47 @@ int main(int argc, char **argv) {
   read_graph(filename,&g,true);    
   print_graph(&g);
 
+  int n_cores = omp_get_num_procs();
+
   printf("\nDONE\n");
 
-  int n_cores = omp_get_num_procs(); 
-  if (!isPowerOfTwo(n_cores)) {
-    printf("Adjust Core Count for Reduction Stuff");
-    omp_set_num_threads((int)pow(2, (int)log2(n_cores))); 
-  }
+  printf("Core Count: %d\n", omp_get_num_procs());
 
-  printf("OKay checking now %d\n", omp_get_num_procs());
-
-  /*
-
-  printf("Ideas %d\n", (int)log2(n_cores));
-
-  int stride = 1;
-  for (i = 32; i >= 1; i /= 2) {
-    printf("What we got %d\n", i);
-    omp_set_num_threads(i); 
-    stride
-    #pragma omp parallel for 
-
-    stride *= 2;
-  }
-  */
-  
+  TopKHeap** top_tens;
+  int** dists;
   TopKHeapNode temp;
   TopKHeap *heap1, *heap2;
+  TopKHeap* top_ten;
+  int* dist;
 
-  StartTimer();
-  TopKHeap** top_tens = malloc(n_cores * sizeof(TopKHeap*));
+  top_tens = malloc(n_cores * sizeof(TopKHeap*));
   for (i = 0; i < n_cores; i++)
     top_tens[i] = create_topkheap(10);
 
-  int** dists = malloc(n_cores * sizeof(int*));
+  dists = malloc(n_cores * sizeof(int*));
   for (i = 0; i < n_cores; i++)
     dists[i] = malloc(g.nvertices*sizeof(int));
 
-  printf("Before\n");
+  double start_time, end_time;
+  start_time = omp_get_wtime();
 
-  #pragma omp parallel for schedule(dynamic) shared(g) private(i,j)
+  #pragma omp parallel for schedule(dynamic) shared(g) private(i,j, top_ten, dist)
   for (i = 0; i < g.nvertices; i++) {
-    TopKHeap* top_ten = top_tens[omp_get_thread_num()];
-    int* dist = dists[omp_get_thread_num()];
+    top_ten = top_tens[omp_get_thread_num()];
+    dist = dists[omp_get_thread_num()];
     dijkstra(&g, i, dist);
-
-    for (j=0; j<g.nvertices; ++j) {
-      if (dist[j] != INT_MAX) {
-        if (top_ten->length < 10) {
-          topkheappush(top_ten, i, j, dist[j]);
-        }
-        else if (dist[j] > top_ten->arr[0].distance && top_ten->length == 10) {
-          topkheappop(top_ten);
-          topkheappush(top_ten, i, j, dist[j]);
-        }
+    for (j = 0; j < g.nvertices; j++) {
+      if (dist[j] == INT_MAX)
+        continue;
+      if (top_ten->length < 10) {
+        topkheappush(top_ten, i, j, dist[j]);
+      }
+      else if (dist[j] > top_ten->arr[0].distance && top_ten->length == 10) {
+        topkheappop(top_ten);
+        topkheappush(top_ten, i, j, dist[j]);
       }
     }
   }
-
-  printf("Did something on %d cores\n", n_cores);
 
   for (i = n_cores-2; i >= 0; i--) {
     heap1 = top_tens[i];
@@ -159,18 +141,23 @@ int main(int argc, char **argv) {
   for (j = 0; j < 10; j++)
     printf("%d %d %d\n", top_ten_arr[j].u, top_ten_arr[j].v, top_ten_arr[j].distance);
 
-  double time_elapsed = GetTimer() / 1000.0;
+  end_time = omp_get_wtime();
 
-  printf("Time Taken!: %.5lf\n", time_elapsed);
+  printf("Time Taken!: %.5lf\n", end_time - start_time);
 
   printf("%d\n", INT_MAX);
 
   for (i = 0; i < n_cores; i++)
     free(dists[i]);
   free(dists);
-  for (i = 0; i < n_cores; i++)
+
+  for (i = 0; i < n_cores; i++) {
+    free(top_tens[i]->arr);
     free(top_tens[i]);
+  }
   free(top_tens);
+  
   free(top_ten_arr);
+
   return(0);
 }

@@ -13,10 +13,8 @@ Heap* create_heap(int max_size) {
 }
 
 void heappush(Heap* heap, int vertex, int distance) {
-  if (heap->length >= heap->max_size - 1) {
-    heap->arr = realloc(heap->arr, 2 * (heap->max_size) * sizeof(HeapNode));
-    heap->max_size = heap->max_size * 2;
-  }
+
+  // No Need to Realloc with a big enough heap >:)
 
   heap->length++;
   heap->arr[heap->length - 1] = (HeapNode) {vertex, distance};
@@ -41,47 +39,46 @@ void heappush(Heap* heap, int vertex, int distance) {
   heap->arr[position] = new_element;
 }
 
-HeapNode heappop(Heap* heap) {
-  if (heap->length == 0) {
-    printf("Popping from an empty heap\n");
-    return (HeapNode) {-1 , -1};
-  }
-
-  int left_child_index, right_child_index, smallest_child_index, parent_index;
+void heapify_down(Heap* heap, int parent_index) {
+  int left_child_index, right_child_index, smallest_child_index;
   HeapNode temp;
 
-  HeapNode smallest = heap->arr[0];
-  HeapNode last_node = heap->arr[heap->length - 1];
-  heap->length--;
+  while (true) {
+    left_child_index = 2 * parent_index + 1;
+    right_child_index = 2 * parent_index + 2;
+    smallest_child_index = parent_index;
 
+    if ((heap->arr[left_child_index].distance < heap->arr[smallest_child_index].distance) && (left_child_index < heap->length)) 
+      smallest_child_index = left_child_index;
+
+    if ((heap->arr[right_child_index].distance < heap->arr[smallest_child_index].distance) && (right_child_index < heap->length)) 
+      smallest_child_index = right_child_index;
+
+    if (smallest_child_index != parent_index) {
+      temp = heap->arr[parent_index];
+      heap->arr[parent_index] = heap->arr[smallest_child_index];
+      heap->arr[smallest_child_index] = temp;
+      parent_index = smallest_child_index;
+    } else {
+      break;
+    }
+  }
+  return;
+}
+
+HeapNode heappop(Heap* heap) {
+
+  heap->length--;
+  HeapNode smallest = heap->arr[0];
+  HeapNode last_node = heap->arr[heap->length];
+  
   if (heap->length > 0) {
     heap->arr[0] = last_node;
-
-    parent_index = 0;
-
-    while (true) {
-      left_child_index = 2 * parent_index + 1;
-      right_child_index = 2 * parent_index + 2;
-      smallest_child_index = parent_index;
-
-      if ((left_child_index < heap->length) && (heap->arr[left_child_index].distance < heap->arr[smallest_child_index].distance)) 
-        smallest_child_index = left_child_index;
-
-      if ((right_child_index < heap->length) && (heap->arr[right_child_index].distance < heap->arr[smallest_child_index].distance)) 
-        smallest_child_index = right_child_index;
-
-      if (smallest_child_index != parent_index) {
-        temp = heap->arr[parent_index];
-        heap->arr[parent_index] = heap->arr[smallest_child_index];
-        heap->arr[smallest_child_index] = temp;
-        parent_index = smallest_child_index;
-      } else {
-        break;
-      }
-    }
+    heapify_down(heap, 0);
   }
   return smallest;
 }
+
 
 TopKHeap* create_topkheap(int k) {
     TopKHeap* heap = malloc(sizeof(TopKHeap));

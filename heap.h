@@ -23,6 +23,7 @@ typedef struct {
 
 Heap* create_heap(int max_size);
 void heappush(Heap* heap, int vertex, int distance);
+void heapify_down(Heap* heap, int parent_index);
 HeapNode heappop(Heap* heap);
 
 TopKHeap* create_topkheap(int k);
