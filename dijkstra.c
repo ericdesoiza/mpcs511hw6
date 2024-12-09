@@ -48,6 +48,8 @@ void dijkstra(Graph *g, int start, int *distance) {
       edge = edge->next;
     }
   }
+  free(pq->arr);
+  free(pq);
   return;
 }
 
